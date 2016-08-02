@@ -1,32 +1,17 @@
-package net.epsilony.mongo.codec;
+package net.epsilony.mongo.codec.demo;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
-
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
-import org.bson.types.ObjectId;
-
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
 import freemarker.template.TemplateException;
+import net.epsilony.mongo.codec.MetaCodecProvider;
 
-public class Temp {
-
-	public StringBuffer getBuffer() {
-		return null;
-	}
-
-	public List<ObjectId> getIds() {
-		return null;
-	}
-
-	public void setIds(List<ObjectId> ids) {
-
-	}
+public class Demo {
 
 	public static void main(String[] args) throws ClassNotFoundException, IOException, IllegalAccessException,
 			InstantiationException, TemplateException {
@@ -50,23 +35,5 @@ public class Temp {
 
 		mongoClient.close();
 
-	}
-
-	public ObjectId getId() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public void setId(ObjectId object) {
-		// TODO Auto-generated method stub
-
-	}
-
-	public void setIntV(int v) {
-
-	}
-
-	public int getIntV() {
-		return 0;
 	}
 }

@@ -117,64 +117,68 @@ public class ${codecName} extends AbstractCodec<${typeName}>{
 
 	@Override
 	public ${typeName} decode(BsonReader reader, DecoderContext decoderContext) {
+
+<#if isEncoderOnly()>
+		return null;
+<#else>
 		${typeName} value = new ${typeName}();
 		reader.readStartDocument();
 		
 		while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
 			String fieldName = reader.readName();
 			switch (fieldName) {
-<#list allProperties as p>
-	<#if p.setterFunc??>
+	<#list allProperties as p>
+		<#if p.setterFunc??>
 			case "${p.name}":
 				if (reader.getCurrentBsonType() == BsonType.NULL) {
 					reader.readNull();
-		<#if p.category!="primitive">
+			<#if p.category!="primitive">
 					value.${p.setterFunc}(null);
-		</#if>
+			</#if>
 				} else {
-	    <#switch p.category>
-		    <#case "primitive">
-		    <#case "primitiveWarpper">
-		    	<#switch p.typeName>
-					<#case "char">
-					<#case "Character">
-					<#case "byte">
-					<#case "Byte">
-					<#case "short">
-					<#case "Short">
-					<#case "int">
-					<#case "Integer">
+		    <#switch p.category>
+			    <#case "primitive">
+			    <#case "primitiveWrapper">
+			    	<#switch p.typeName>
+						<#case "char">
+						<#case "Character">
+						<#case "byte">
+						<#case "Byte">
+						<#case "short">
+						<#case "Short">
+						<#case "int">
+						<#case "Integer">
 					value.${p.setterFunc}((${p.primitiveName})reader.readInt32());
-					<#break>
-					<#case "long">
-					<#case "Long">
+						<#break>
+						<#case "long">
+						<#case "Long">
 					value.${p.setterFunc}((${p.primitiveName})reader.readInt64());
-					<#break>
-					<#case "boolean">
-					<#case "Boolean">
+						<#break>
+						<#case "boolean">
+						<#case "Boolean">
 					value.${p.setterFunc}((${p.primitiveName})reader.readBoolean());
-					<#break>
-					<#case "float">
-					<#case "Float">
-					<#case "double">
-					<#case "Double">
+						<#break>
+						<#case "float">
+						<#case "Float">
+						<#case "double">
+						<#case "Double">
 					value.${p.setterFunc}((${p.primitiveName})reader.readDouble());
-				</#switch>
-			<#break>
-		    <#case "object">
+					</#switch>
+				<#break>
+			    <#case "object">
 					value.${p.setterFunc}(codecRegistry.get(${p.typeName}.class).decode(reader, decoderContext));
-			<#break>
-			<#case "collection">
+				<#break>
+				<#case "collection">
 					value.${p.setterFunc}((${p.typeName})readCollection(${p.tokenName}, reader, decoderContext));
-			<#break>
-			<#case "map">
+				<#break>
+				<#case "map">
 					value.${p.setterFunc}(readDocument(reader,decoderContext));
-			<#break>
-		</#switch>
+				<#break>
+			</#switch>
 				}
 				break;
-	</#if>
-</#list>
+		</#if>
+	</#list>
 			default:
 				reader.skipValue();
 			}
@@ -183,7 +187,7 @@ public class ${codecName} extends AbstractCodec<${typeName}>{
 		reader.readEndDocument();
 		
 		return value;
-		
+</#if>
 	}
 
 }

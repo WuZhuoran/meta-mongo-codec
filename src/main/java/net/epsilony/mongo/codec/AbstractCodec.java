@@ -98,7 +98,7 @@ public abstract class AbstractCodec<T> implements Codec<T> {
 			} else if (Set.class.isAssignableFrom(rawClass)) {
 				result = new LinkedHashSet();
 			} else {
-				throw new IllegalStateException();
+				throw new IllegalStateException(rawClass.getName() + "is not supported yet!");
 			}
 		} else {
 			try {

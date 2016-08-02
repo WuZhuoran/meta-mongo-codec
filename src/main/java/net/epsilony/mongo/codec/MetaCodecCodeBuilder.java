@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
+import net.epsilony.mongo.codec.demo.Demo;
 
 public class MetaCodecCodeBuilder {
 
@@ -23,7 +24,7 @@ public class MetaCodecCodeBuilder {
 	private Template template;
 	{
 		Configuration cfg = new Configuration(Configuration.VERSION_2_3_25);
-		cfg.setClassLoaderForTemplateLoading(Temp.class.getClassLoader(), "/net/epsilony/mongo/codec/");
+		cfg.setClassLoaderForTemplateLoading(Demo.class.getClassLoader(), "/net/epsilony/mongo/codec/");
 		try {
 			template = cfg.getTemplate("codec.ftl");
 		} catch (IOException e) {
@@ -63,10 +64,17 @@ public class MetaCodecCodeBuilder {
 	}
 
 	@SuppressWarnings("rawtypes")
+	public MetaCodecCodeBuilder annotationToName(AnnotationToName annotationToName) {
+		this.annotationToName = annotationToName;
+		return this;
+	}
+
+	@SuppressWarnings("rawtypes")
 	public static MetaCodecCodeBuilder clazz(Class clazz) {
 		MetaCodecCodeBuilder builder = new MetaCodecCodeBuilder();
 		builder.clazz = clazz;
 		builder.codecName = clazz.getSimpleName();
 		return builder;
 	}
+
 }

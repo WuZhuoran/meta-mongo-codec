@@ -19,4 +19,6 @@ public interface CodecDataModel {
 
 	Collection<TokenDataModel> getTokens();
 
+	Boolean isEncoderOnly();
+
 }

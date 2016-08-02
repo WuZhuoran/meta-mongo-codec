@@ -1,5 +1,6 @@
 package net.epsilony.mongo.codec;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.Multimaps;
 
+import net.epsilony.mongo.codec.demo.SampleBean;
 import net.openhft.compiler.CompilerUtils;
 
 public class MetaCodecProvider implements CodecProvider {
@@ -21,19 +24,20 @@ public class MetaCodecProvider implements CodecProvider {
 	private static final Logger log = LoggerFactory.getLogger(MetaCodecProvider.class);
 
 	@SuppressWarnings("rawtypes")
-	private ListMultimap<String, Class> nameToType = MultimapBuilder.hashKeys().arrayListValues().build();
+	private ListMultimap<String, Class> nameToType = Multimaps
+			.synchronizedListMultimap(MultimapBuilder.hashKeys().arrayListValues().build());
 	private String packageName;
 	@SuppressWarnings("rawtypes")
-	private Map<Class, Codec> codecs = new LinkedHashMap<>();
+	private Map<Class, Codec> codecs = Collections.synchronizedMap(new LinkedHashMap<>());
 	@SuppressWarnings("rawtypes")
 	private AnnotationToName annotationToName;
 
 	@SuppressWarnings("rawtypes")
-	private Map<Class, Class> fatherToActual = new LinkedHashMap<>();
+	private Map<Class, Class> fatherToActual = Collections.synchronizedMap(new LinkedHashMap<>());
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	public <T> Codec<T> get(Class<T> clazz, CodecRegistry registry) {
+	synchronized public <T> Codec<T> get(Class<T> clazz, CodecRegistry registry) {
 
 		Codec codec = codecs.get(clazz);
 		if (codec != null) {
@@ -45,7 +49,8 @@ public class MetaCodecProvider implements CodecProvider {
 		String codecName = simpleName + "Codec" + (list.isEmpty() ? "" : list.size());
 		nameToType.put(simpleName, clazz);
 
-		String javaCode = MetaCodecCodeBuilder.clazz(clazz).codecName(codecName).packageName(packageName).build();
+		String javaCode = MetaCodecCodeBuilder.clazz(clazz).codecName(codecName).packageName(packageName)
+				.annotationToName(annotationToName).build();
 
 		Class<? extends AbstractCodec<SampleBean>> loadFromJava;
 		try {
@@ -65,11 +70,13 @@ public class MetaCodecProvider implements CodecProvider {
 
 		Class actualClazz = fatherToActual.get(clazz);
 		if (null == actualClazz) {
+			codecs.put(clazz, abstractCodec);
 			return abstractCodec;
 		}
 
 		Codec actualCodec = get(actualClazz, registry);
 		ForceDecoderCodec forceCodec = new ForceDecoderCodec(abstractCodec, clazz, actualCodec);
+		codecs.put(clazz, forceCodec);
 		return forceCodec;
 	}
 

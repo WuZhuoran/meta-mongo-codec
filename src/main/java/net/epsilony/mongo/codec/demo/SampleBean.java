@@ -1,4 +1,4 @@
-package net.epsilony.mongo.codec;
+package net.epsilony.mongo.codec.demo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,7 +11,9 @@ import org.bson.types.ObjectId;
 
 import com.google.common.collect.Sets;
 
-public class SampleBean {
+import net.epsilony.mongo.codec.AlterName;
+
+public class SampleBean extends FatherBean {
 
 	byte byteV;
 	char charV;

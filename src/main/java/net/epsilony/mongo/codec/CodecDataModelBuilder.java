@@ -1,18 +1,22 @@
 package net.epsilony.mongo.codec;
 
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import org.apache.commons.beanutils.PropertyUtils;
 import org.bson.BsonReader;
 import org.bson.BsonType;
 import org.bson.BsonWriter;
@@ -46,17 +50,25 @@ public class CodecDataModelBuilder implements Function<Class<?>, CodecDataModel>
 	@Override
 	public CodecDataModel apply(Class<?> type) {
 
-		PropertyDescriptor[] propertyDescriptors = PropertyUtils.getPropertyDescriptors(type);
-		allProperties = new ArrayList<>(propertyDescriptors.length);
+		List<PropertyDescriptor> propertyDescriptors;
+		try {
+			propertyDescriptors = fetchProperties(type);
+		} catch (IntrospectionException e) {
+			throw new IllegalStateException(e);
+		}
+
+		Set<String> processedPropertyNames = new HashSet<>();
+		allProperties = new ArrayList<>(propertyDescriptors.size());
 		for (PropertyDescriptor pd : propertyDescriptors) {
-			if (pd.getName().equals("class")) {
+			if (processedPropertyNames.contains(pd.getName())) {
 				continue;
 			}
 			SimplePropertyDataModel pdm = createPropertyDescriptor(pd);
+			processedPropertyNames.add(pd.getName());
 			if (null == pdm) {
 				continue;
 			}
-			if (pd.getName().equals("_id")) {
+			if (pdm.getName().equals("_id")) {
 				id = pdm;
 			}
 			allProperties.add(pdm);
@@ -117,7 +129,31 @@ public class CodecDataModelBuilder implements Function<Class<?>, CodecDataModel>
 			public Collection<TokenDataModel> getTokens() {
 				return typeTokens;
 			}
+
+			@Override
+			public Boolean isEncoderOnly() {
+				return type.isInterface() || Modifier.isAbstract(type.getModifiers());
+			}
 		};
+	}
+
+	private List<PropertyDescriptor> fetchProperties(Class<?> type) throws IntrospectionException {
+		List<PropertyDescriptor> propertyDescriptors;
+		if (type.isInterface()) {
+			propertyDescriptors = new ArrayList<>();
+			propertyDescriptors.addAll(Arrays.asList(Introspector.getBeanInfo(type).getPropertyDescriptors()));
+			Class<?>[] interfaces = type.getInterfaces();
+			if (null == interfaces) {
+				return propertyDescriptors;
+			}
+			for (Class<?> superInterface : interfaces) {
+				propertyDescriptors.addAll(fetchProperties(superInterface));
+			}
+			return propertyDescriptors;
+		} else {
+			propertyDescriptors = Arrays.asList(Introspector.getBeanInfo(type, Object.class).getPropertyDescriptors());
+			return propertyDescriptors;
+		}
 	}
 
 	@SuppressWarnings({ "unchecked" })
